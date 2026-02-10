@@ -34,6 +34,13 @@ function gravatar_proxy_init() {
 }
 add_action('plugins_loaded', 'gravatar_proxy_init');
 
+function gravatar_proxy_action_links($links) {
+    $settings = '<a href="' . esc_url(admin_url('options-general.php?page=gravatar-proxy')) . '">设置</a>';
+    array_unshift($links, $settings);
+    return $links;
+}
+add_filter('plugin_action_links_' . plugin_basename(__FILE__), 'gravatar_proxy_action_links');
+
 function gravatar_proxy_add_rewrite_rules() {
     add_rewrite_rule('^gravatar-proxy/([a-f0-9]{32})/?$', 'index.php?gravatar_proxy_hash=$matches[1]', 'top');
 }
