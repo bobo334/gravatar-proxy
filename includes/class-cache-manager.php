@@ -32,6 +32,15 @@ class Cache_Manager {
         }
     }
 
+    public function clear_all() {
+        $files = glob($this->cache_dir . '/*.jpg');
+        foreach ($files as $file) {
+            if (is_file($file)) {
+                unlink($file);
+            }
+        }
+    }
+
     public function cleanup() {
         $files = glob($this->cache_dir . '/*.jpg');
         foreach ($files as $f) {

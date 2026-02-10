@@ -16,6 +16,7 @@ class Gravatar_Proxy {
         add_action('gravatar_proxy_cache_cleanup', [$this, 'cache_cleanup']);
         add_action('admin_menu', [$this, 'add_settings_page']);
         add_action('admin_init', [$this, 'register_settings']);
+        add_action('admin_init', [$this, 'handle_cache_actions']);
     }
 
     public function proxy_gravatar_url($url, $id_or_email, $args) {
@@ -58,6 +59,32 @@ class Gravatar_Proxy {
         $cache->cleanup();
     }
 
+    public function handle_cache_actions() {
+        if (isset($_POST['gravatar_proxy_clear_cache']) && check_admin_referer('gravatar_proxy_clear_cache')) {
+            $cache = new Cache_Manager();
+            $cache->clear_all();
+            add_action('admin_notices', [$this, 'cache_cleared_notice']);
+        }
+    }
+
+    public function cache_cleared_notice() {
+        echo '<div class="notice notice-success is-dismissible"><p>缓存已清空！</p></div>';
+    }
+
+    private function get_cache_stats() {
+        $cache_dir = GRAVATAR_CACHE_DIR;
+        $files = glob($cache_dir . '/*.jpg');
+        $total_size = 0;
+        foreach ($files as $file) {
+            $total_size += filesize($file);
+        }
+        return [
+            'count' => count($files),
+            'size' => size_format($total_size),
+            'size_bytes' => $total_size
+        ];
+    }
+
     public function add_settings_page() {
         add_options_page('Gravatar Proxy', 'Gravatar Proxy', 'manage_options', 'gravatar-proxy', [$this, 'settings_page']);
     }
@@ -68,9 +95,34 @@ class Gravatar_Proxy {
     }
 
     public function settings_page() {
+        $stats = $this->get_cache_stats();
         ?>
         <div class="wrap">
             <h1>Gravatar Proxy 设置</h1>
+            
+            <h2>缓存管理</h2>
+            <div class="card" style="max-width: 600px; margin-bottom: 20px;">
+                <table class="form-table">
+                    <tr>
+                        <th scope="row">缓存文件数</th>
+                        <td><strong><?php echo esc_html($stats['count']); ?></strong> 个</td>
+                    </tr>
+                    <tr>
+                        <th scope="row">缓存总大小</th>
+                        <td><strong><?php echo esc_html($stats['size']); ?></strong></td>
+                    </tr>
+                    <tr>
+                        <th scope="row">缓存目录</th>
+                        <td><code><?php echo esc_html(GRAVATAR_CACHE_DIR); ?></code></td>
+                    </tr>
+                </table>
+                <form method="post" style="margin-top: 20px;">
+                    <?php wp_nonce_field('gravatar_proxy_clear_cache'); ?>
+                    <input type="submit" name="gravatar_proxy_clear_cache" class="button button-secondary" value="清空所有缓存" onclick="return confirm('确定要清空所有缓存吗？');">
+                </form>
+            </div>
+            
+            <h2>插件设置</h2>
             <form method="post" action="options.php">
                 <?php
                 settings_fields('gravatar_proxy_options');
