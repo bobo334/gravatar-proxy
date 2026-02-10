@@ -1,6 +1,7 @@
 <?php
 class Gravatar_Proxy {
     private static $instance = null;
+    private $cdn;
 
     public static function get_instance() {
         if (null === self::$instance) {
@@ -10,6 +11,7 @@ class Gravatar_Proxy {
     }
 
     private function __construct() {
+        $this->cdn = new CDN_Manager();
         add_filter('get_avatar_url', [$this, 'proxy_gravatar_url'], 10, 3);
         add_filter('get_avatar', [$this, 'proxy_gravatar_html'], 10, 5);
         add_action('init', [$this, 'register_cron']);
@@ -22,7 +24,7 @@ class Gravatar_Proxy {
     public function proxy_gravatar_url($url, $id_or_email, $args) {
         $hash = $this->get_email_hash($id_or_email);
         if ($hash) {
-            return home_url('/gravatar-proxy/?hash=' . $hash);
+            return $this->cdn->get_avatar_url($hash);
         }
         return $url;
     }
@@ -30,8 +32,8 @@ class Gravatar_Proxy {
     public function proxy_gravatar_html($avatar, $id_or_email, $size, $default, $alt) {
         $hash = $this->get_email_hash($id_or_email);
         if ($hash) {
-            $proxy = home_url('/gravatar-proxy/?hash=' . $hash);
-            return '<img src="' . esc_url($proxy) . '" alt="' . esc_attr($alt) . '" class="avatar avatar-' . $size . ' photo" height="' . $size . '" width="' . $size . '">';
+            $proxy = $this->cdn->get_avatar_url($hash);
+            return '<img src="' . esc_url($proxy) . '" alt="' . esc_attr($alt) . '" class="avatar avatar-' . (int) $size . ' photo" height="' . (int) $size . '" width="' . (int) $size . '">';
         }
         return $avatar;
     }
@@ -39,7 +41,7 @@ class Gravatar_Proxy {
     private function get_email_hash($id_or_email) {
         if (is_numeric($id_or_email)) {
             $user = get_userdata($id_or_email);
-            $email = $user->user_email ?? '';
+            $email = ($user && !empty($user->user_email)) ? $user->user_email : '';
         } elseif (is_object($id_or_email) && property_exists($id_or_email, 'user_email')) {
             $email = $id_or_email->user_email;
         } else {
@@ -60,11 +62,19 @@ class Gravatar_Proxy {
     }
 
     public function handle_cache_actions() {
-        if (isset($_POST['gravatar_proxy_clear_cache']) && check_admin_referer('gravatar_proxy_clear_cache')) {
-            $cache = new Cache_Manager();
-            $cache->clear_all();
-            add_action('admin_notices', [$this, 'cache_cleared_notice']);
+        if (!isset($_POST['gravatar_proxy_clear_cache'])) {
+            return;
         }
+        if (!current_user_can('manage_options')) {
+            return;
+        }
+        if (!check_admin_referer('gravatar_proxy_clear_cache')) {
+            return;
+        }
+
+        $cache = new Cache_Manager();
+        $cache->clear_all();
+        add_action('admin_notices', [$this, 'cache_cleared_notice']);
     }
 
     public function cache_cleared_notice() {
@@ -90,8 +100,12 @@ class Gravatar_Proxy {
     }
 
     public function register_settings() {
-        register_setting('gravatar_proxy_options', 'gravatar_proxy_cdn_url');
-        register_setting('gravatar_proxy_options', 'gravatar_proxy_cache_size');
+        register_setting('gravatar_proxy_options', 'gravatar_proxy_cdn_url', [
+            'sanitize_callback' => 'esc_url_raw',
+        ]);
+        register_setting('gravatar_proxy_options', 'gravatar_proxy_cache_size', [
+            'sanitize_callback' => 'absint',
+        ]);
     }
 
     public function settings_page() {
@@ -99,7 +113,7 @@ class Gravatar_Proxy {
         ?>
         <div class="wrap">
             <h1>Gravatar Proxy 设置</h1>
-            
+
             <h2>缓存管理</h2>
             <div class="card" style="max-width: 600px; margin-bottom: 20px;">
                 <table class="form-table">
@@ -121,7 +135,7 @@ class Gravatar_Proxy {
                     <input type="submit" name="gravatar_proxy_clear_cache" class="button button-secondary" value="清空所有缓存" onclick="return confirm('确定要清空所有缓存吗？');">
                 </form>
             </div>
-            
+
             <h2>插件设置</h2>
             <form method="post" action="options.php">
                 <?php

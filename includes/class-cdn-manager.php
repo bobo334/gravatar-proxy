@@ -10,7 +10,7 @@ class CDN_Manager {
         if ($this->cdn_url) {
             return rtrim($this->cdn_url, '/') . '/' . $hash . '.jpg';
         }
-        return home_url('/gravatar-proxy/?hash=' . $hash);
+        return home_url('/gravatar-proxy/' . $hash . '/');
     }
 
     public function purge($hash) {

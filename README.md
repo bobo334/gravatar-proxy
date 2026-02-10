@@ -36,7 +36,7 @@
 使用以下格式访问缓存的头像：
 
 ```
-https://yourdomain.com/?hash={gravatar_hash}
+https://yourdomain.com/gravatar-proxy/{gravatar_hash}/
 ```
 
 其中 `{gravatar_hash}` 是用户的 Gravatar MD5 哈希值。
@@ -46,7 +46,7 @@ https://yourdomain.com/?hash={gravatar_hash}
 如果用户在 Gravatar 上更新了头像，可以通过添加 `refresh=1` 参数强制刷新缓存：
 
 ```
-https://yourdomain.com/?hash={gravatar_hash}&refresh=1
+https://yourdomain.com/gravatar-proxy/{gravatar_hash}/?refresh=1
 ```
 
 这会删除该头像的缓存并从 Gravatar 重新获取最新头像。
@@ -119,6 +119,12 @@ bobo
 感谢所有为本项目做出贡献的开发者。
 
 ## 更新日志
+
+### 1.2.1
+- 安全加固：仅特定路径处理请求，新增重写规则与 query var
+- 增强远程请求校验与回退逻辑
+- 增加权限校验与设置项输入清理
+- 修复后台页面 HTML
 
 ### 1.2.0
 - 添加 WordPress 后台管理页面
