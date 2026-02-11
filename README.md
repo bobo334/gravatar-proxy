@@ -103,6 +103,9 @@ https://github.com/bobotechnology/gravatar-proxy
 
 ## 更新日志
 
+### 1.2.5
+- 修复评论头像获取时的类型错误
+
 ### 1.2.4
 - 后台新增一键刷新重写规则按钮与提示
 - 更新插件主页链接
