@@ -44,8 +44,12 @@ class Gravatar_Proxy {
         if (is_numeric($id_or_email)) {
             $user = get_userdata($id_or_email);
             $email = ($user && !empty($user->user_email)) ? $user->user_email : '';
+        } elseif ($id_or_email instanceof WP_Comment) {
+            $email = $id_or_email->comment_author_email ?? '';
         } elseif (is_object($id_or_email) && property_exists($id_or_email, 'user_email')) {
             $email = $id_or_email->user_email;
+        } elseif (is_object($id_or_email) && property_exists($id_or_email, 'comment_author_email')) {
+            $email = $id_or_email->comment_author_email;
         } else {
             $email = $id_or_email;
         }
