@@ -3,7 +3,7 @@
 Plugin Name: Gravatar Proxy
 Plugin URI: https://github.com/bobotechnology/gravatar-proxy
 Description: 本地代理 Gravatar 头像，提升加载速度
-Version: 1.2.3
+Version: 1.2.4
 Author: bobo
 License: GPL v2 or later
 */
@@ -13,7 +13,7 @@ if (!defined('ABSPATH')) {
 }
 
 // 常量定义
-define('GRAVATAR_PROXY_VERSION', '1.2.3');
+define('GRAVATAR_PROXY_VERSION', '1.2.4');
 define('GRAVATAR_PROXY_PATH', plugin_dir_path(__FILE__));
 define('GRAVATAR_PROXY_URL', plugin_dir_url(__FILE__));
 if (!defined('GRAVATAR_CACHE_DIR')) {

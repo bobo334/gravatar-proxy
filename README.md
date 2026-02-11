@@ -103,6 +103,10 @@ https://github.com/bobotechnology/gravatar-proxy
 
 ## 更新日志
 
+### 1.2.4
+- 后台新增一键刷新重写规则按钮与提示
+- 更新插件主页链接
+
 ### 1.2.3
 - 插件列表新增“设置”快捷入口
 - 优化设置页 UI
